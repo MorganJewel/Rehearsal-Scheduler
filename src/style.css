@@ -502,3 +502,75 @@ hr.divider {
   border-top: 1px solid var(--border);
   margin: 1.5rem 0;
 }
+
+/* ─── Tour ────────────────────────────────────────────── */
+.tour-tooltip {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.4rem;
+  width: 330px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(201, 168, 76, 0.2);
+}
+
+.tour-tt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.tour-step-label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.tour-skip-btn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+.tour-skip-btn:hover { color: var(--accent2); text-decoration: underline; }
+
+.tour-progress-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.tour-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+
+.tour-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.tour-text {
+  font-size: 0.875rem;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 1.1rem;
+}
+
+.tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

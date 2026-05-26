@@ -6,6 +6,7 @@ import {
 } from '../store.js'
 import { navHTML, attachNavListeners } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
+import { HF_API_KEY } from '../config.js'
 
 const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other']
 
@@ -266,16 +267,10 @@ function confirmDeleteSched(id, name, productionId) {
 // ── AI Suggestion ─────────────────────────────────────────────────
 
 async function runAI(scheduleId, schedule, production, blocks) {
-  const hfKey = localStorage.getItem('hf_api_key')
+  const hfKey = HF_API_KEY
   const statusEl = document.getElementById('ai-status')
   const suggestionsEl = document.getElementById('ai-suggestions')
   const btn = document.getElementById('ai-btn')
-
-  if (!hfKey) {
-    statusEl.style.display = 'block'
-    statusEl.textContent = 'No HF API key set. Click "✦ AI Key" in the nav to add one.'
-    return
-  }
 
   btn.disabled = true
   statusEl.style.display = 'block'
