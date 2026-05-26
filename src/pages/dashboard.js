@@ -1,9 +1,9 @@
 import { navigate } from '../router.js'
-import { getSupabaseClient } from '../supabase.js'
-import { navHTML, attachLogout } from '../nav.js'
+import { getProductions, createProduction, updateProduction, deleteProduction } from '../store.js'
+import { navHTML, attachNavListeners } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
 
-export async function renderDashboard() {
+export function renderDashboard() {
   const app = document.getElementById('app')
   app.innerHTML = `
     ${navHTML('dashboard')}
@@ -15,35 +15,22 @@ export async function renderDashboard() {
         </div>
         <button class="btn btn-primary" id="new-production-btn">+ New Production</button>
       </div>
-      <div id="productions-list"><div class="loading">Loading…</div></div>
+      <div id="productions-list"></div>
     </div>
   `
 
-  attachLogout()
-
-  document.getElementById('new-production-btn').addEventListener('click', () => {
-    openNewProductionModal()
-  })
-
-  await loadProductions()
+  attachNavListeners()
+  document.getElementById('new-production-btn').addEventListener('click', openNewProductionModal)
+  renderList()
 }
 
-async function loadProductions() {
-  const supabase = getSupabaseClient()
+function renderList() {
   const list = document.getElementById('productions-list')
   if (!list) return
 
-  const { data, error } = await supabase
-    .from('productions')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const productions = getProductions()
 
-  if (error) {
-    list.innerHTML = `<p class="error-msg">Failed to load productions: ${error.message}</p>`
-    return
-  }
-
-  if (!data.length) {
+  if (!productions.length) {
     list.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🎭</div>
@@ -54,22 +41,19 @@ async function loadProductions() {
     return
   }
 
-  list.innerHTML = data.map(p => `
+  list.innerHTML = productions.map(p => `
     <div class="card card-clickable" data-id="${p.id}">
       <div class="card-header">
         <div>
-          <div class="card-title">${escHtml(p.name)}</div>
-          ${p.playwright ? `<div class="card-subtitle">by ${escHtml(p.playwright)}</div>` : ''}
+          <div class="card-title">${esc(p.name)}</div>
+          ${p.playwright ? `<div class="card-subtitle">by ${esc(p.playwright)}</div>` : ''}
         </div>
         <div class="card-actions">
-          <button class="btn btn-ghost btn-sm edit-btn" data-id="${p.id}"
-            data-name="${escAttr(p.name)}" data-playwright="${escAttr(p.playwright || '')}">
-            Edit
-          </button>
-          <button class="btn btn-danger btn-sm delete-btn" data-id="${p.id}"
-            data-name="${escAttr(p.name)}">
-            Delete
-          </button>
+          <button class="btn btn-ghost btn-sm edit-btn"
+            data-id="${p.id}" data-name="${escAttr(p.name)}"
+            data-playwright="${escAttr(p.playwright || '')}">Edit</button>
+          <button class="btn btn-danger btn-sm delete-btn"
+            data-id="${p.id}" data-name="${escAttr(p.name)}">Delete</button>
         </div>
       </div>
     </div>
@@ -85,14 +69,14 @@ async function loadProductions() {
   list.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation()
-      openEditProductionModal(btn.dataset.id, btn.dataset.name, btn.dataset.playwright)
+      openEditModal(btn.dataset.id, btn.dataset.name, btn.dataset.playwright)
     })
   })
 
   list.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation()
-      confirmDeleteProduction(btn.dataset.id, btn.dataset.name)
+      confirmDelete(btn.dataset.id, btn.dataset.name)
     })
   })
 }
@@ -100,12 +84,12 @@ async function loadProductions() {
 function productionFormHTML(name = '', playwright = '') {
   return `
     <div class="form-group">
-      <label class="form-label" for="prod-name">Production Name *</label>
+      <label class="form-label">Production Name *</label>
       <input class="form-input" id="prod-name" type="text"
-        placeholder="e.g. Hamlet" value="${escAttr(name)}" required />
+        placeholder="e.g. Hamlet" value="${escAttr(name)}" autofocus />
     </div>
     <div class="form-group">
-      <label class="form-label" for="prod-playwright">Playwright</label>
+      <label class="form-label">Playwright</label>
       <input class="form-input" id="prod-playwright" type="text"
         placeholder="e.g. William Shakespeare" value="${escAttr(playwright)}" />
     </div>
@@ -117,77 +101,49 @@ function openNewProductionModal() {
   openModal({
     title: 'New Production',
     bodyHTML: productionFormHTML(),
-    submitLabel: 'Create Production',
-    onSubmit: async () => {
+    submitLabel: 'Create',
+    onSubmit: () => {
       const name = document.getElementById('prod-name').value.trim()
       if (!name) { document.getElementById('prod-error').textContent = 'Name is required.'; return }
-
-      const playwright = document.getElementById('prod-playwright').value.trim()
-      const supabase = getSupabaseClient()
-      const { data: { session } } = await supabase.auth.getSession()
-
-      const { error } = await supabase
-        .from('productions')
-        .insert({ name, playwright: playwright || null, user_id: session.user.id })
-
-      if (error) { document.getElementById('prod-error').textContent = error.message; return }
+      createProduction({ name, playwright: document.getElementById('prod-playwright').value.trim() })
       closeModal()
-      await loadProductions()
+      renderList()
     }
   })
 }
 
-function openEditProductionModal(id, name, playwright) {
+function openEditModal(id, name, playwright) {
   openModal({
     title: 'Edit Production',
     bodyHTML: productionFormHTML(name, playwright),
-    submitLabel: 'Save Changes',
-    onSubmit: async () => {
+    submitLabel: 'Save',
+    onSubmit: () => {
       const newName = document.getElementById('prod-name').value.trim()
       if (!newName) { document.getElementById('prod-error').textContent = 'Name is required.'; return }
-
-      const newPlaywright = document.getElementById('prod-playwright').value.trim()
-      const supabase = getSupabaseClient()
-
-      const { error } = await supabase
-        .from('productions')
-        .update({ name: newName, playwright: newPlaywright || null })
-        .eq('id', id)
-
-      if (error) { document.getElementById('prod-error').textContent = error.message; return }
+      updateProduction(id, { name: newName, playwright: document.getElementById('prod-playwright').value.trim() })
       closeModal()
-      await loadProductions()
+      renderList()
     }
   })
 }
 
-function confirmDeleteProduction(id, name) {
+function confirmDelete(id, name) {
   openModal({
     title: 'Delete Production',
     bodyHTML: `
-      <p>Are you sure you want to delete <strong>${escHtml(name)}</strong>?</p>
-      <p style="color:var(--text2);font-size:0.85rem;margin-top:0.5rem">
-        All schedules and blocks in this production will also be deleted.
-      </p>
-      <p class="error-msg" id="del-error"></p>
+      <p>Delete <strong>${esc(name)}</strong>? All schedules and blocks will be removed.</p>
     `,
     submitLabel: 'Delete',
-    onSubmit: async () => {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase.from('productions').delete().eq('id', id)
-      if (error) { document.getElementById('del-error').textContent = error.message; return }
+    onSubmit: () => {
+      deleteProduction(id)
       closeModal()
-      await loadProductions()
+      renderList()
     }
   })
-
   document.getElementById('modal-submit-btn')?.classList.replace('btn-primary', 'btn-danger')
 }
 
-function escHtml(str) {
+function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
-
-function escAttr(str) {
-  return String(str ?? '').replace(/"/g, '&quot;')
-}
+function escAttr(str) { return String(str ?? '').replace(/"/g, '&quot;') }

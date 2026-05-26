@@ -1,118 +1,111 @@
 import { navigate } from '../router.js'
-import { getSupabaseClient } from '../supabase.js'
-import { navHTML, attachLogout } from '../nav.js'
+import {
+  getScheduleById, updateSchedule, deleteSchedule,
+  getProductionById,
+  getBlocksBySchedule, createBlock, updateBlock, deleteBlock
+} from '../store.js'
+import { navHTML, attachNavListeners } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
 
 const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other']
 
-export async function renderSchedule(id) {
+export function renderSchedule(id) {
+  const schedule = getScheduleById(id)
   const app = document.getElementById('app')
-  app.innerHTML = `
-    ${navHTML()}
-    <div class="page" id="sched-page">
-      <div class="loading">Loading…</div>
-    </div>
-  `
 
-  attachLogout()
-  await loadPage(id)
-}
-
-async function loadPage(id) {
-  const supabase = getSupabaseClient()
-  const page = document.getElementById('sched-page')
-  if (!page) return
-
-  const { data: schedule, error: se } = await supabase
-    .from('schedules')
-    .select('*, productions(id, name)')
-    .eq('id', id)
-    .single()
-
-  if (se || !schedule) {
-    page.innerHTML = `
-      <p class="error-msg">Schedule not found or access denied.</p>
-      <a href="#/" class="btn btn-ghost" style="margin-top:1rem">← Dashboard</a>
+  if (!schedule) {
+    app.innerHTML = `
+      ${navHTML()}
+      <div class="page">
+        <p class="error-msg">Schedule not found.</p>
+        <a href="#/" class="btn btn-ghost" style="margin-top:1rem">← Dashboard</a>
+      </div>
     `
+    attachNavListeners()
     return
   }
 
-  const { data: blocks, error: be } = await supabase
-    .from('blocks')
-    .select('*')
-    .eq('schedule_id', id)
-    .order('order_index', { ascending: true })
+  renderPage(id)
+}
 
-  const production = schedule.productions
+function renderPage(id) {
+  const schedule = getScheduleById(id)
+  if (!schedule) { navigate('/'); return }
 
-  page.innerHTML = `
-    <div class="breadcrumb">
-      <a href="#/">Dashboard</a> /
-      <a href="#/production/${production.id}">${escHtml(production.name)}</a> /
-      ${escHtml(schedule.name)}
-    </div>
+  const production = getProductionById(schedule.production_id)
+  const blocks = getBlocksBySchedule(id)
+  const totalMin = blocks.reduce((sum, b) => sum + (b.duration_minutes || 0), 0)
 
-    <div class="page-header">
-      <div class="page-header-left">
-        <h1 class="page-title">${escHtml(schedule.name)}</h1>
-        ${schedule.date ? `<p class="page-subtitle">${formatDate(schedule.date)}</p>` : ''}
+  const app = document.getElementById('app')
+  app.innerHTML = `
+    ${navHTML()}
+    <div class="page">
+      <div class="breadcrumb">
+        <a href="#/">Dashboard</a> /
+        <a href="#/production/${production?.id}">${esc(production?.name ?? 'Production')}</a> /
+        ${esc(schedule.name)}
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:center">
-        <button class="btn btn-ghost btn-sm" id="edit-sched-btn">Edit</button>
-        <button class="btn btn-danger btn-sm" id="delete-sched-btn">Delete</button>
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1 class="page-title">${esc(schedule.name)}</h1>
+          ${schedule.date ? `<p class="page-subtitle">${formatDate(schedule.date)}</p>` : ''}
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-ghost btn-sm" id="edit-sched-btn">Edit</button>
+          <button class="btn btn-danger btn-sm" id="delete-sched-btn">Delete</button>
+        </div>
       </div>
-    </div>
 
-    <div class="section-header">
-      <span class="section-title">
-        Blocks
-        ${(blocks ?? []).length
-          ? `<span style="color:var(--text2);margin-left:0.5rem">
-              · ${totalDuration(blocks ?? [])} min total
-            </span>`
-          : ''}
-      </span>
-      <button class="btn btn-primary btn-sm" id="add-block-btn">+ Add Block</button>
-    </div>
-
-    <div id="blocks-list">
-      ${renderBlocksList(blocks ?? [])}
-    </div>
-
-    <!-- AI panel -->
-    <div class="ai-panel">
-      <div class="ai-panel-header">
-        <span class="ai-panel-title">✦ Apertus AI</span>
-        <button class="btn btn-ghost btn-sm" id="ai-suggest-btn">Suggest Schedule Name</button>
+      <div class="section-header">
+        <span class="section-title">
+          Blocks
+          ${blocks.length ? `<span style="color:var(--text2);font-weight:400;margin-left:0.5rem">· ${totalMin} min total</span>` : ''}
+        </span>
+        <button class="btn btn-primary btn-sm" id="add-block-btn">+ Add Block</button>
       </div>
-      <div id="ai-status" class="ai-status" style="display:none"></div>
-      <div id="ai-suggestions" class="ai-suggestions"></div>
+
+      <div id="blocks-list">
+        ${renderBlockList(blocks)}
+      </div>
+
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <span class="ai-panel-title">✦ Apertus AI</span>
+          <button class="btn btn-ghost btn-sm" id="ai-btn">Suggest Schedule Name</button>
+        </div>
+        <p id="ai-status" class="ai-status" style="display:none"></p>
+        <div id="ai-suggestions" class="ai-suggestions"></div>
+      </div>
     </div>
   `
 
-  document.getElementById('edit-sched-btn').addEventListener('click', () => {
-    openEditScheduleModal(id, schedule.name, schedule.date || '', () => loadPage(id))
+  attachNavListeners()
+
+  document.getElementById('edit-sched-btn').addEventListener('click', () =>
+    openEditSchedModal(id, schedule, () => renderPage(id)))
+  document.getElementById('delete-sched-btn').addEventListener('click', () =>
+    confirmDeleteSched(id, schedule.name, production?.id))
+  document.getElementById('add-block-btn').addEventListener('click', () =>
+    openBlockModal(null, id, blocks.length, () => renderPage(id)))
+  document.getElementById('ai-btn').addEventListener('click', () =>
+    runAI(id, schedule, production, blocks))
+
+  document.querySelectorAll('.block-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const block = blocks.find(b => b.id === btn.dataset.id)
+      if (block) openBlockModal(block, id, block.order_index, () => renderPage(id))
+    })
   })
 
-  document.getElementById('delete-sched-btn').addEventListener('click', () => {
-    confirmDeleteSchedule(id, schedule.name, production.id)
+  document.querySelectorAll('.block-del').forEach(btn => {
+    btn.addEventListener('click', () => confirmDeleteBlock(btn.dataset.id, btn.dataset.name, () => renderPage(id)))
   })
-
-  document.getElementById('add-block-btn').addEventListener('click', () => {
-    const nextOrder = (blocks ?? []).length
-    openBlockModal(null, id, nextOrder, () => loadPage(id))
-  })
-
-  document.getElementById('ai-suggest-btn').addEventListener('click', () => {
-    runAISuggestion(id, schedule, blocks ?? [])
-  })
-
-  attachBlockListeners(id, blocks ?? [], () => loadPage(id))
 }
 
 // ── Block rendering ───────────────────────────────────────────────
 
-function renderBlocksList(blocks) {
+function renderBlockList(blocks) {
   if (!blocks.length) {
     return `
       <div class="empty-state">
@@ -124,53 +117,38 @@ function renderBlocksList(blocks) {
   }
 
   return blocks.map((b, i) => `
-    <div class="block-card" data-id="${b.id}">
+    <div class="block-card">
       <div class="block-top">
         <div>
-          <span style="color:var(--text2);font-size:0.8rem;margin-right:0.5rem">#${i + 1}</span>
-          <span class="block-name">${escHtml(b.scene_name || 'Untitled scene')}</span>
+          <span style="color:var(--text2);font-size:0.78rem;margin-right:0.4rem">${i + 1}.</span>
+          <span class="block-name">${esc(b.scene_name || 'Untitled scene')}</span>
+          ${b.block_type
+            ? `<span class="type-badge ${badgeClass(b.block_type)}" style="margin-left:0.6rem">${esc(b.block_type)}</span>`
+            : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem">
-          ${b.block_type ? `<span class="type-badge ${badgeClass(b.block_type)}">${escHtml(b.block_type)}</span>` : ''}
-          <button class="btn btn-ghost btn-sm block-edit-btn" data-id="${b.id}">Edit</button>
-          <button class="btn btn-danger btn-sm block-del-btn" data-id="${b.id}"
-            data-name="${escAttr(b.scene_name || 'Untitled scene')}">Del</button>
+        <div style="display:flex;gap:0.4rem;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm block-edit" data-id="${b.id}">Edit</button>
+          <button class="btn btn-danger btn-sm block-del"
+            data-id="${b.id}" data-name="${escAttr(b.scene_name || 'Untitled scene')}">Del</button>
         </div>
       </div>
       <div class="block-meta">
-        ${b.actors ? `<span>👥 ${escHtml(b.actors)}</span>` : ''}
+        ${b.actors ? `<span>👥 ${esc(b.actors)}</span>` : ''}
         ${b.duration_minutes ? `<span>⏱ ${b.duration_minutes} min</span>` : ''}
-        ${b.order_index != null ? `<span style="color:var(--border)">order: ${b.order_index}</span>` : ''}
       </div>
-      ${b.notes ? `<div class="block-notes">${escHtml(b.notes)}</div>` : ''}
+      ${b.notes ? `<div class="block-notes">${esc(b.notes)}</div>` : ''}
     </div>
   `).join('')
 }
 
-function attachBlockListeners(scheduleId, blocks, reload) {
-  document.querySelectorAll('.block-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const block = blocks.find(b => b.id === btn.dataset.id)
-      if (block) openBlockModal(block, scheduleId, block.order_index, reload)
-    })
-  })
-
-  document.querySelectorAll('.block-del-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      confirmDeleteBlock(btn.dataset.id, btn.dataset.name, reload)
-    })
-  })
-}
-
 // ── Block modals ──────────────────────────────────────────────────
 
-function blockFormHTML(block = null) {
-  const b = block ?? {}
+function blockFormHTML(b = {}) {
   return `
     <div class="form-group">
       <label class="form-label">Scene Name</label>
       <input class="form-input" id="b-scene" type="text"
-        placeholder="e.g. Act I, Scene 3" value="${escAttr(b.scene_name || '')}" />
+        placeholder="e.g. Act I, Scene 2" value="${escAttr(b.scene_name || '')}" autofocus />
     </div>
     <div class="form-group">
       <label class="form-label">Actors</label>
@@ -182,60 +160,53 @@ function blockFormHTML(block = null) {
         <label class="form-label">Block Type</label>
         <select class="form-select" id="b-type">
           <option value="">— select —</option>
-          ${BLOCK_TYPES.map(t =>
-            `<option value="${t}" ${(b.block_type === t) ? 'selected' : ''}>${t}</option>`
-          ).join('')}
+          ${BLOCK_TYPES.map(t => `<option value="${t}" ${b.block_type === t ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Duration (minutes)</label>
+        <label class="form-label">Duration (min)</label>
         <input class="form-input" id="b-duration" type="number"
-          min="1" max="480" placeholder="60"
-          value="${b.duration_minutes ?? ''}" />
+          min="1" max="480" placeholder="30" value="${b.duration_minutes ?? ''}" />
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Order Index</label>
-      <input class="form-input" id="b-order" type="number"
-        min="0" value="${b.order_index ?? 0}" />
+      <input class="form-input" id="b-order" type="number" min="0"
+        value="${b.order_index ?? 0}" />
     </div>
     <div class="form-group">
       <label class="form-label">Notes</label>
       <textarea class="form-textarea" id="b-notes"
-        placeholder="Staging notes, focus areas…">${escHtml(b.notes || '')}</textarea>
+        placeholder="Staging notes, focus areas…">${esc(b.notes || '')}</textarea>
     </div>
     <p class="error-msg" id="block-error"></p>
   `
+}
+
+function readBlockForm(scheduleId) {
+  return {
+    schedule_id: scheduleId,
+    scene_name: document.getElementById('b-scene').value.trim() || null,
+    actors: document.getElementById('b-actors').value.trim() || null,
+    block_type: document.getElementById('b-type').value || null,
+    duration_minutes: parseInt(document.getElementById('b-duration').value) || null,
+    order_index: parseInt(document.getElementById('b-order').value) || 0,
+    notes: document.getElementById('b-notes').value.trim() || null
+  }
 }
 
 function openBlockModal(block, scheduleId, defaultOrder, reload) {
   const isEdit = !!block
   openModal({
     title: isEdit ? 'Edit Block' : 'Add Block',
-    bodyHTML: blockFormHTML(block ? block : { order_index: defaultOrder }),
-    submitLabel: isEdit ? 'Save Changes' : 'Add Block',
-    onSubmit: async () => {
-      const supabase = getSupabaseClient()
-      const payload = {
-        schedule_id: scheduleId,
-        scene_name: document.getElementById('b-scene').value.trim() || null,
-        actors: document.getElementById('b-actors').value.trim() || null,
-        block_type: document.getElementById('b-type').value || null,
-        duration_minutes: parseInt(document.getElementById('b-duration').value) || null,
-        order_index: parseInt(document.getElementById('b-order').value) || 0,
-        notes: document.getElementById('b-notes').value.trim() || null
-      }
-
-      let error
-      if (isEdit) {
-        ;({ error } = await supabase.from('blocks').update(payload).eq('id', block.id))
-      } else {
-        ;({ error } = await supabase.from('blocks').insert(payload))
-      }
-
-      if (error) { document.getElementById('block-error').textContent = error.message; return }
+    bodyHTML: blockFormHTML(block ?? { order_index: defaultOrder }),
+    submitLabel: isEdit ? 'Save' : 'Add Block',
+    onSubmit: () => {
+      const data = readBlockForm(scheduleId)
+      if (isEdit) updateBlock(block.id, data)
+      else createBlock(data)
       closeModal()
-      await reload()
+      reload()
     }
   })
 }
@@ -243,67 +214,48 @@ function openBlockModal(block, scheduleId, defaultOrder, reload) {
 function confirmDeleteBlock(id, name, reload) {
   openModal({
     title: 'Delete Block',
-    bodyHTML: `
-      <p>Delete block <strong>${escHtml(name)}</strong>?</p>
-      <p class="error-msg" id="del-error"></p>
-    `,
+    bodyHTML: `<p>Delete block <strong>${esc(name)}</strong>?</p>`,
     submitLabel: 'Delete',
-    onSubmit: async () => {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase.from('blocks').delete().eq('id', id)
-      if (error) { document.getElementById('del-error').textContent = error.message; return }
-      closeModal()
-      await reload()
-    }
+    onSubmit: () => { deleteBlock(id); closeModal(); reload() }
   })
   document.getElementById('modal-submit-btn')?.classList.replace('btn-primary', 'btn-danger')
 }
 
 // ── Schedule modals ───────────────────────────────────────────────
 
-function openEditScheduleModal(id, name, date, reload) {
+function openEditSchedModal(id, schedule, reload) {
   openModal({
     title: 'Edit Schedule',
     bodyHTML: `
       <div class="form-group">
-        <label class="form-label">Schedule Name *</label>
-        <input class="form-input" id="sched-name" type="text" value="${escAttr(name)}" />
+        <label class="form-label">Name *</label>
+        <input class="form-input" id="sched-name" type="text"
+          value="${escAttr(schedule.name)}" autofocus />
       </div>
       <div class="form-group">
         <label class="form-label">Date</label>
-        <input class="form-input" id="sched-date" type="date" value="${escAttr(date)}" />
+        <input class="form-input" id="sched-date" type="date" value="${escAttr(schedule.date || '')}" />
       </div>
       <p class="error-msg" id="sched-error"></p>
     `,
-    submitLabel: 'Save Changes',
-    onSubmit: async () => {
-      const newName = document.getElementById('sched-name').value.trim()
-      if (!newName) { document.getElementById('sched-error').textContent = 'Name required.'; return }
-      const newDate = document.getElementById('sched-date').value || null
-      const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from('schedules')
-        .update({ name: newName, date: newDate })
-        .eq('id', id)
-      if (error) { document.getElementById('sched-error').textContent = error.message; return }
+    submitLabel: 'Save',
+    onSubmit: () => {
+      const name = document.getElementById('sched-name').value.trim()
+      if (!name) { document.getElementById('sched-error').textContent = 'Name required.'; return }
+      updateSchedule(id, { name, date: document.getElementById('sched-date').value || null })
       closeModal()
-      await reload()
+      reload()
     }
   })
 }
 
-function confirmDeleteSchedule(id, name, productionId) {
+function confirmDeleteSched(id, name, productionId) {
   openModal({
     title: 'Delete Schedule',
-    bodyHTML: `
-      <p>Delete <strong>${escHtml(name)}</strong>? All blocks will be removed.</p>
-      <p class="error-msg" id="del-error"></p>
-    `,
+    bodyHTML: `<p>Delete <strong>${esc(name)}</strong>? All blocks will be removed.</p>`,
     submitLabel: 'Delete',
-    onSubmit: async () => {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase.from('schedules').delete().eq('id', id)
-      if (error) { document.getElementById('del-error').textContent = error.message; return }
+    onSubmit: () => {
+      deleteSchedule(id)
       closeModal()
       navigate('/production/' + productionId)
     }
@@ -313,15 +265,15 @@ function confirmDeleteSchedule(id, name, productionId) {
 
 // ── AI Suggestion ─────────────────────────────────────────────────
 
-async function runAISuggestion(scheduleId, schedule, blocks) {
+async function runAI(scheduleId, schedule, production, blocks) {
   const hfKey = localStorage.getItem('hf_api_key')
   const statusEl = document.getElementById('ai-status')
   const suggestionsEl = document.getElementById('ai-suggestions')
-  const btn = document.getElementById('ai-suggest-btn')
+  const btn = document.getElementById('ai-btn')
 
   if (!hfKey) {
     statusEl.style.display = 'block'
-    statusEl.textContent = 'No Hugging Face API key set. Visit Settings to add one.'
+    statusEl.textContent = 'No HF API key set. Click "✦ AI Key" in the nav to add one.'
     return
   }
 
@@ -332,24 +284,22 @@ async function runAISuggestion(scheduleId, schedule, blocks) {
 
   const blockSummary = blocks.length
     ? blocks.map(b =>
-        `- Scene: ${b.scene_name || 'Untitled'}, ` +
-        `Actors: ${b.actors || 'none'}, ` +
-        `Type: ${b.block_type || 'other'}, ` +
-        `Duration: ${b.duration_minutes || '?'} min`
+        `- ${b.scene_name || 'Untitled'} | actors: ${b.actors || 'none'} | type: ${b.block_type || 'other'} | ${b.duration_minutes || '?'} min`
       ).join('\n')
-    : '(no blocks defined yet)'
+    : '(no blocks defined)'
 
-  const prompt = `[INST] You are helping a theater director name a rehearsal schedule.
-Production: ${schedule.productions?.name || 'Unknown'}
-Schedule date: ${schedule.date || 'not set'}
+  const prompt = `[INST] You are helping a theater director create a short, evocative name for a rehearsal schedule.
 
-Rehearsal blocks:
+Production: ${production?.name ?? 'Unknown'}
+Schedule date: ${schedule.date ?? 'not set'}
+
+Blocks:
 ${blockSummary}
 
-Give exactly 3 short, creative schedule names — each on its own line, no numbers, no explanations, no quotes. Just the names. [/INST]`
+Reply with exactly 3 schedule name suggestions, one per line, no numbering, no punctuation, no explanations. Just 3 names. [/INST]`
 
   try {
-    const response = await fetch(
+    const res = await fetch(
       'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
       {
         method: 'POST',
@@ -359,59 +309,43 @@ Give exactly 3 short, creative schedule names — each on its own line, no numbe
         },
         body: JSON.stringify({
           inputs: prompt,
-          parameters: {
-            max_new_tokens: 120,
-            temperature: 0.8,
-            return_full_text: false
-          }
+          parameters: { max_new_tokens: 100, temperature: 0.8, return_full_text: false }
         })
       }
     )
 
-    if (!response.ok) {
-      const errText = await response.text()
-      statusEl.textContent = `API error (${response.status}): ${errText.slice(0, 120)}`
+    if (!res.ok) {
+      const txt = await res.text()
+      statusEl.textContent = `API error ${res.status}: ${txt.slice(0, 100)}`
       btn.disabled = false
       return
     }
 
-    const result = await response.json()
-    const raw = Array.isArray(result) ? result[0]?.generated_text : result?.generated_text
-    if (!raw) {
-      statusEl.textContent = 'No response from model. Try again.'
-      btn.disabled = false
-      return
-    }
+    const json = await res.json()
+    const raw = Array.isArray(json) ? json[0]?.generated_text : json?.generated_text
+    if (!raw) { statusEl.textContent = 'No response from model.'; btn.disabled = false; return }
 
     const suggestions = raw
       .split('\n')
-      .map(l => l.replace(/^[\d.\-*•]+\s*/, '').trim())
+      .map(l => l.replace(/^[\d.\-*•"]+\s*/, '').replace(/["]+$/, '').trim())
       .filter(l => l.length > 2 && l.length < 80)
       .slice(0, 3)
 
     if (!suggestions.length) {
-      statusEl.textContent = 'Could not parse suggestions. Raw: ' + raw.slice(0, 100)
+      statusEl.textContent = 'Could not parse suggestions. Try again.'
       btn.disabled = false
       return
     }
 
-    statusEl.textContent = 'Pick a suggestion to apply it as the schedule name:'
+    statusEl.textContent = 'Pick one to rename this schedule:'
     suggestionsEl.innerHTML = suggestions.map(s =>
-      `<button class="ai-suggestion-pill" data-name="${escAttr(s)}">${escHtml(s)}</button>`
+      `<button class="ai-suggestion-pill" data-name="${escAttr(s)}">${esc(s)}</button>`
     ).join('')
 
     suggestionsEl.querySelectorAll('.ai-suggestion-pill').forEach(pill => {
-      pill.addEventListener('click', async () => {
-        const supabase = getSupabaseClient()
-        const { error } = await supabase
-          .from('schedules')
-          .update({ name: pill.dataset.name })
-          .eq('id', scheduleId)
-        if (!error) {
-          statusEl.textContent = `Schedule renamed to "${pill.dataset.name}".`
-          suggestionsEl.innerHTML = ''
-          await loadPage(scheduleId)
-        }
+      pill.addEventListener('click', () => {
+        updateSchedule(scheduleId, { name: pill.dataset.name, date: schedule.date })
+        renderPage(scheduleId)
       })
     })
   } catch (err) {
@@ -424,32 +358,17 @@ Give exactly 3 short, creative schedule names — each on its own line, no numbe
 // ── Helpers ───────────────────────────────────────────────────────
 
 function badgeClass(type) {
-  const map = {
-    'blocking': 'badge-blocking',
-    'run-through': 'badge-run-through',
-    'table work': 'badge-table-work',
-    'tech': 'badge-tech',
-    'other': 'badge-other'
-  }
-  return map[type] ?? 'badge-other'
+  return { blocking: 'badge-blocking', 'run-through': 'badge-run-through',
+           'table work': 'badge-table-work', tech: 'badge-tech', other: 'badge-other' }[type] ?? 'badge-other'
 }
 
-function totalDuration(blocks) {
-  return blocks.reduce((sum, b) => sum + (b.duration_minutes || 0), 0)
+function formatDate(s) {
+  if (!s) return ''
+  const [y, m, d] = s.split('-')
+  return new Date(+y, +m - 1, +d).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const [y, m, d] = dateStr.split('-')
-  return new Date(+y, +m - 1, +d).toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  })
-}
-
-function escHtml(str) {
+function esc(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 }
-
-function escAttr(str) {
-  return String(str ?? '').replace(/"/g, '&quot;')
-}
+function escAttr(str) { return String(str ?? '').replace(/"/g, '&quot;') }
