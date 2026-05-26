@@ -403,9 +403,9 @@ body {
 
 .ai-panel-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .ai-panel-title {
@@ -414,13 +414,39 @@ body {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.ai-advisory-label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  font-style: italic;
+}
+
+.ai-btn-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 }
 
 .ai-suggestions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-advice {
   margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.65;
+  white-space: pre-wrap;
 }
 
 .ai-suggestion-pill {
@@ -573,4 +599,58 @@ hr.divider {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* ─── Coming Soon card ────────────────────────────────── */
+.coming-soon-card {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  opacity: 0.85;
+}
+
+.cs-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cs-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.cs-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.cs-desc {
+  font-size: 0.875rem;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.cs-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.cs-feature {
+  font-size: 0.82rem;
+  color: var(--text2);
 }

@@ -73,10 +73,33 @@ function renderPage(id) {
       <div class="ai-panel">
         <div class="ai-panel-header">
           <span class="ai-panel-title">✦ Apertus AI</span>
+          <span class="ai-advisory-label">Advisory only — all decisions stay with you</span>
+        </div>
+        <div class="ai-btn-row">
           <button class="btn btn-ghost btn-sm" id="ai-btn">Suggest Schedule Name</button>
+          <button class="btn btn-ghost btn-sm" id="ai-pacing-btn">Analyze Pacing &amp; Load</button>
         </div>
         <p id="ai-status" class="ai-status" style="display:none"></p>
         <div id="ai-suggestions" class="ai-suggestions"></div>
+        <div id="ai-advice" class="ai-advice" style="display:none"></div>
+      </div>
+
+      <div class="coming-soon-card">
+        <div class="cs-header">
+          <span class="cs-badge">Coming Soon</span>
+          <h3 class="cs-title">Messaging &amp; Reminders</h3>
+        </div>
+        <p class="cs-desc">
+          Send today's schedule directly to cast and crew, push on-deck reminders
+          to actors waiting outside, and manage multiple simultaneous schedules
+          during tech week — all without leaving the app.
+        </p>
+        <div class="cs-features">
+          <span class="cs-feature">📨 Cast &amp; crew schedule distribution</span>
+          <span class="cs-feature">⏰ On-deck reminders for actors out of the room</span>
+          <span class="cs-feature">🗓 Tech week multi-schedule dashboard</span>
+          <span class="cs-feature">📢 Broadcast messages mid-rehearsal</span>
+        </div>
       </div>
     </div>
   `
@@ -91,6 +114,8 @@ function renderPage(id) {
     openBlockModal(null, id, blocks.length, () => renderPage(id)))
   document.getElementById('ai-btn').addEventListener('click', () =>
     runAI(id, schedule, production, blocks))
+  document.getElementById('ai-pacing-btn').addEventListener('click', () =>
+    runPacingAnalysis(id, schedule, production, blocks))
 
   document.querySelectorAll('.block-edit').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -345,6 +370,80 @@ ${blockSummary}`
         renderPage(scheduleId)
       })
     })
+  } catch (err) {
+    statusEl.textContent = `Error: ${err.message}`
+  } finally {
+    btn.disabled = false
+  }
+}
+
+// ── Pacing Analysis ───────────────────────────────────────────────
+
+async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
+  const statusEl = document.getElementById('ai-status')
+  const adviceEl = document.getElementById('ai-advice')
+  const suggestionsEl = document.getElementById('ai-suggestions')
+  const btn = document.getElementById('ai-pacing-btn')
+
+  btn.disabled = true
+  statusEl.style.display = 'block'
+  statusEl.textContent = 'Analyzing schedule…'
+  suggestionsEl.innerHTML = ''
+  adviceEl.style.display = 'none'
+
+  if (!blocks.length) {
+    statusEl.textContent = 'Add some blocks first so Apertus has something to analyze.'
+    btn.disabled = false
+    return
+  }
+
+  const totalMin = blocks.reduce((s, b) => s + (b.duration_minutes || 0), 0)
+  const blockList = blocks.map((b, i) =>
+    `${i + 1}. ${b.scene_name || 'Untitled'} | actors: ${b.actors || 'none'} | type: ${b.block_type || 'other'} | ${b.duration_minutes || '?'} min`
+  ).join('\n')
+
+  try {
+    const res = await fetch(
+      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${HF_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'swiss-ai/Apertus-8B-Instruct-2509',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a stage management advisor. You give brief, practical observations — never make decisions for the SM. Flag concerns only; keep it under 100 words total.'
+            },
+            {
+              role: 'user',
+              content: `Review this rehearsal schedule for pacing, actor load, and flow. Flag 2–3 specific things worth watching. Do not suggest rearranging anything — just observations.
+
+Production: ${production?.name ?? 'Unknown'}
+Total time: ${totalMin} min
+Blocks:\n${blockList}`
+            }
+          ],
+          max_tokens: 150,
+          temperature: 0.6
+        })
+      }
+    )
+
+    if (!res.ok) {
+      const txt = await res.text()
+      statusEl.textContent = `API error ${res.status}: ${txt.slice(0, 120)}`
+      btn.disabled = false
+      return
+    }
+
+    const json = await res.json()
+    const raw = json?.choices?.[0]?.message?.content?.trim()
+    if (!raw) { statusEl.textContent = 'No response from Apertus.'; btn.disabled = false; return }
+
+    statusEl.textContent = 'Apertus observations — your call on what to do with these:'
+    adviceEl.style.display = 'block'
+    adviceEl.textContent = raw
   } catch (err) {
     statusEl.textContent = `Error: ${err.message}`
   } finally {
