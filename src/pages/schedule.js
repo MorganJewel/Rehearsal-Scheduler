@@ -4,11 +4,12 @@ import {
   getProductionById,
   getBlocksBySchedule, createBlock, updateBlock, deleteBlock
 } from '../store.js'
-import { navHTML, attachNavListeners } from '../nav.js'
+import { navHTML, attachNavListeners, isUnionMode } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
 import { HF_API_KEY } from '../config.js'
+import { checkUnionRules } from '../union.js'
 
-const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other']
+const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other', 'break']
 
 export function renderSchedule(id) {
   const schedule = getScheduleById(id)
@@ -36,6 +37,8 @@ function renderPage(id) {
   const production = getProductionById(schedule.production_id)
   const blocks = getBlocksBySchedule(id)
   const totalMin = blocks.reduce((sum, b) => sum + (b.duration_minutes || 0), 0)
+  const unionOn = isUnionMode()
+  const { violations, warnings } = unionOn ? checkUnionRules(blocks) : { violations: [], warnings: [] }
 
   const app = document.getElementById('app')
   app.innerHTML = `
@@ -57,6 +60,8 @@ function renderPage(id) {
           <button class="btn btn-danger btn-sm" id="delete-sched-btn">Delete</button>
         </div>
       </div>
+
+      ${unionOn ? renderUnionPanel(violations, warnings) : ''}
 
       <div class="section-header">
         <span class="section-title">
@@ -451,11 +456,56 @@ Blocks:\n${blockList}`
   }
 }
 
+// ── Union panel ───────────────────────────────────────────────────
+
+function renderUnionPanel(violations, warnings) {
+  const hasIssues = violations.length > 0 || warnings.length > 0
+  const panelClass = violations.length ? 'union-panel union-has-violations'
+    : warnings.length ? 'union-panel union-has-warnings'
+    : 'union-panel union-clear'
+
+  return `
+    <div class="${panelClass}">
+      <div class="union-panel-header">
+        <span class="union-mode-label">⚖ Union Mode (AEA)</span>
+        ${violations.length
+          ? `<span class="union-count-badge union-viol-badge">${violations.length} violation${violations.length !== 1 ? 's' : ''}</span>`
+          : warnings.length
+          ? `<span class="union-count-badge union-warn-badge">${warnings.length} warning${warnings.length !== 1 ? 's' : ''}</span>`
+          : `<span class="union-ok-badge">✓ Schedule appears compliant</span>`}
+      </div>
+
+      ${violations.map(v => `
+        <div class="union-issue-row union-issue-violation">
+          <span class="union-rule-tag union-tag-violation">${esc(v.rule)}</span>
+          <span class="union-issue-detail">${esc(v.detail)}</span>
+        </div>
+      `).join('')}
+
+      ${warnings.map(w => `
+        <div class="union-issue-row union-issue-warning">
+          <span class="union-rule-tag union-tag-warning">${esc(w.rule)}</span>
+          <span class="union-issue-detail">${esc(w.detail)}</span>
+        </div>
+      `).join('')}
+
+      ${hasIssues ? `
+        <p class="union-hint">
+          Add a block of type <strong>break</strong> to schedule rest periods.
+          Breaks ≥5 min satisfy the 55-minute rule; ≥60 min counts as a meal break.
+        </p>` : ''}
+    </div>
+  `
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 
 function badgeClass(type) {
-  return { blocking: 'badge-blocking', 'run-through': 'badge-run-through',
-           'table work': 'badge-table-work', tech: 'badge-tech', other: 'badge-other' }[type] ?? 'badge-other'
+  return {
+    blocking: 'badge-blocking', 'run-through': 'badge-run-through',
+    'table work': 'badge-table-work', tech: 'badge-tech',
+    break: 'badge-break', other: 'badge-other'
+  }[type] ?? 'badge-other'
 }
 
 function formatDate(s) {
