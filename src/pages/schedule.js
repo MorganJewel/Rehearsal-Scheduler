@@ -283,19 +283,20 @@ async function runAI(scheduleId, schedule, production, blocks) {
       ).join('\n')
     : '(no blocks defined)'
 
-  const prompt = `[INST] You are helping a theater director create a short, evocative name for a rehearsal schedule.
+  const prompt = `<|system|>
+You are a concise assistant helping a theater director name rehearsal schedules.</s>
+<|user|>
+Suggest exactly 3 short, evocative names for a rehearsal schedule. Reply with only the 3 names, one per line, no numbers, no explanations.
 
 Production: ${production?.name ?? 'Unknown'}
-Schedule date: ${schedule.date ?? 'not set'}
-
+Date: ${schedule.date ?? 'not set'}
 Blocks:
-${blockSummary}
-
-Reply with exactly 3 schedule name suggestions, one per line, no numbering, no punctuation, no explanations. Just 3 names. [/INST]`
+${blockSummary}</s>
+<|assistant|>`
 
   try {
     const res = await fetch(
-      'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+      'https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta',
       {
         method: 'POST',
         headers: {
@@ -304,7 +305,7 @@ Reply with exactly 3 schedule name suggestions, one per line, no numbering, no p
         },
         body: JSON.stringify({
           inputs: prompt,
-          parameters: { max_new_tokens: 100, temperature: 0.8, return_full_text: false }
+          parameters: { max_new_tokens: 80, temperature: 0.85, return_full_text: false, stop: ['</s>'] }
         })
       }
     )
