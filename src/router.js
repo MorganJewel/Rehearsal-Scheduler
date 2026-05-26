@@ -49,3 +49,7 @@ export function initRouter() {
   window.addEventListener('hashchange', dispatch)
   dispatch()
 }
+
+export function rerender() {
+  dispatch()
+}
