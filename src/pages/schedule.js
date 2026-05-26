@@ -283,20 +283,16 @@ async function runAI(scheduleId, schedule, production, blocks) {
       ).join('\n')
     : '(no blocks defined)'
 
-  const prompt = `<|system|>
-You are a concise assistant helping a theater director name rehearsal schedules.</s>
-<|user|>
-Suggest exactly 3 short, evocative names for a rehearsal schedule. Reply with only the 3 names, one per line, no numbers, no explanations.
+  const userMsg = `Suggest exactly 3 short, evocative names for a rehearsal schedule. Reply with only the 3 names, one per line — no numbers, no bullet points, no explanations.
 
 Production: ${production?.name ?? 'Unknown'}
 Date: ${schedule.date ?? 'not set'}
 Blocks:
-${blockSummary}</s>
-<|assistant|>`
+${blockSummary}`
 
   try {
     const res = await fetch(
-      'https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta',
+      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
       {
         method: 'POST',
         headers: {
@@ -304,22 +300,27 @@ ${blockSummary}</s>
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: { max_new_tokens: 80, temperature: 0.85, return_full_text: false, stop: ['</s>'] }
+          model: 'swiss-ai/Apertus-8B-Instruct-2509',
+          messages: [
+            { role: 'system', content: 'You are a concise assistant helping a theater director name rehearsal schedules.' },
+            { role: 'user', content: userMsg }
+          ],
+          max_tokens: 80,
+          temperature: 0.85
         })
       }
     )
 
     if (!res.ok) {
       const txt = await res.text()
-      statusEl.textContent = `API error ${res.status}: ${txt.slice(0, 100)}`
+      statusEl.textContent = `API error ${res.status}: ${txt.slice(0, 120)}`
       btn.disabled = false
       return
     }
 
     const json = await res.json()
-    const raw = Array.isArray(json) ? json[0]?.generated_text : json?.generated_text
-    if (!raw) { statusEl.textContent = 'No response from model.'; btn.disabled = false; return }
+    const raw = json?.choices?.[0]?.message?.content
+    if (!raw) { statusEl.textContent = 'No response from Apertus.'; btn.disabled = false; return }
 
     const suggestions = raw
       .split('\n')
