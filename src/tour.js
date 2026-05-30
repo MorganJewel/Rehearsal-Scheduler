@@ -3,13 +3,13 @@ import { navigate } from './router.js'
 const STEPS = [
   {
     title: 'Welcome to Rehearsal Scheduler',
-    text: "This quick tour walks you through every feature — takes about 2 minutes. Hit Next to begin, or Skip to jump straight in.",
+    text: "This quick tour walks you through every feature. Takes about 2 minutes. Hit Next to begin, or Skip to jump straight in.",
     target: null,
     page: null
   },
   {
     title: 'Your Dashboard',
-    text: "The Dashboard lists all your productions — plays, musicals, readings, anything you're directing. We've pre-loaded a demo production so you can explore right away.",
+    text: "The Dashboard lists all your productions: plays, musicals, readings, anything you're directing. We've pre-loaded a demo production so you can explore right away.",
     target: '#productions-list',
     page: '/'
   },
@@ -27,7 +27,7 @@ const STEPS = [
   },
   {
     title: 'Schedules',
-    text: 'A schedule is one rehearsal session — usually one per day. Click a schedule card to open it, or use "+ New Schedule" to add one. Each schedule belongs to exactly one production.',
+    text: 'A schedule is one rehearsal session, usually one per day. Click a schedule card to open it, or use "+ New Schedule" to add one. Each schedule belongs to exactly one production.',
     target: '#schedules-list',
     page: '/production/demo-prod-1'
   },
@@ -39,7 +39,7 @@ const STEPS = [
   },
   {
     title: 'Rehearsal Blocks',
-    text: 'Each card is one block: a scene, a run-through, table work, a tech call — whatever you need. Blocks show scene name, actors, type badge, duration, and your staging notes.',
+    text: 'Each card is one block: a scene, a run-through, table work, a tech call, whatever you need. Blocks show scene name, actors, type badge, duration, and your staging notes.',
     target: '.block-card',
     page: '/schedule/demo-sched-1'
   },
@@ -63,7 +63,7 @@ const STEPS = [
   },
   {
     title: "You're All Set!",
-    text: "That covers everything. Go create your own productions, build schedules, fill in blocks, and try the AI tool. Everything resets on refresh — so experiment freely.",
+    text: "That covers everything. Go create your own productions, build schedules, fill in blocks, and try the AI tool. Everything resets on refresh, so experiment freely.",
     target: null,
     page: null
   }

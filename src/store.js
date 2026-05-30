@@ -27,7 +27,7 @@ let blocks = [
   {
     id: 'demo-block-1',
     schedule_id: 'demo-sched-1',
-    scene_name: 'Act I, Scene 1 — The Battlements',
+    scene_name: 'Act I, Scene 1: The Battlements',
     actors: 'Hamlet, Horatio, Marcellus, Ghost',
     block_type: 'blocking',
     duration_minutes: 40,
@@ -37,7 +37,7 @@ let blocks = [
   {
     id: 'demo-block-2',
     schedule_id: 'demo-sched-1',
-    scene_name: 'Act I, Scene 2 — The Court',
+    scene_name: 'Act I, Scene 2: The Court',
     actors: 'Hamlet, Claudius, Gertrude, Polonius',
     block_type: 'table work',
     duration_minutes: 30,
@@ -47,7 +47,7 @@ let blocks = [
   {
     id: 'demo-block-3',
     schedule_id: 'demo-sched-1',
-    scene_name: 'Act I, Scene 3 — Polonius\'s House',
+    scene_name: 'Act I, Scene 3: Polonius\'s House',
     actors: 'Laertes, Ophelia, Polonius',
     block_type: 'run-through',
     duration_minutes: 25,
