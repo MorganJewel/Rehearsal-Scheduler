@@ -140,7 +140,6 @@ function renderBlockList(blocks) {
   if (!blocks.length) {
     return `
       <div class="empty-state">
-        <div class="empty-state-icon">—</div>
         <h3>No blocks yet</h3>
         <p>Add rehearsal blocks to build your schedule</p>
       </div>
