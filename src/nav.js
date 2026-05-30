@@ -13,9 +13,9 @@ export function navHTML(active = '') {
       <div class="nav-links">
         <a href="#/" class="${active === 'dashboard' ? 'active' : ''}">Dashboard</a>
         <button class="btn btn-sm ${union ? 'btn-union-on' : 'btn-ghost'}" id="union-toggle-btn">
-          ⚖ Union ${union ? 'ON' : 'OFF'}
+          Union ${union ? 'ON' : 'OFF'}
         </button>
-        <button class="btn btn-ghost btn-sm" id="tour-btn">✦ Take Tour</button>
+        <button class="btn btn-ghost btn-sm" id="tour-btn">Take Tour</button>
       </div>
     </nav>
   `

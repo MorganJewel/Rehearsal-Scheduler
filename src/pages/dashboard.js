@@ -33,7 +33,7 @@ function renderList() {
   if (!productions.length) {
     list.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">🎭</div>
+        <div class="empty-state-icon">—</div>
         <h3>No productions yet</h3>
         <p>Create your first production to get started</p>
       </div>

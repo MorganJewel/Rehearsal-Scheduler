@@ -77,7 +77,7 @@ function renderPage(id) {
 
       <div class="ai-panel">
         <div class="ai-panel-header">
-          <span class="ai-panel-title">✦ Apertus AI</span>
+          <span class="ai-panel-title">Apertus AI</span>
           <span class="ai-advisory-label">Advisory only — all decisions stay with you</span>
         </div>
         <div class="ai-btn-row">
@@ -100,10 +100,10 @@ function renderPage(id) {
           during tech week — all without leaving the app.
         </p>
         <div class="cs-features">
-          <span class="cs-feature">📨 Cast &amp; crew schedule distribution</span>
-          <span class="cs-feature">⏰ On-deck reminders for actors out of the room</span>
-          <span class="cs-feature">🗓 Tech week multi-schedule dashboard</span>
-          <span class="cs-feature">📢 Broadcast messages mid-rehearsal</span>
+          <span class="cs-feature">→ Cast &amp; crew schedule distribution</span>
+          <span class="cs-feature">→ On-deck reminders for actors out of the room</span>
+          <span class="cs-feature">→ Tech week multi-schedule dashboard</span>
+          <span class="cs-feature">→ Broadcast messages mid-rehearsal</span>
         </div>
       </div>
     </div>
@@ -140,7 +140,7 @@ function renderBlockList(blocks) {
   if (!blocks.length) {
     return `
       <div class="empty-state">
-        <div class="empty-state-icon">🎬</div>
+        <div class="empty-state-icon">—</div>
         <h3>No blocks yet</h3>
         <p>Add rehearsal blocks to build your schedule</p>
       </div>
@@ -148,7 +148,7 @@ function renderBlockList(blocks) {
   }
 
   return blocks.map((b, i) => `
-    <div class="block-card">
+    <div class="block-card${b.block_type ? ` btype-${b.block_type.replace(/\s+/g, '-')}` : ''}">
       <div class="block-top">
         <div>
           <span style="color:var(--text2);font-size:0.78rem;margin-right:0.4rem">${i + 1}.</span>
@@ -164,8 +164,8 @@ function renderBlockList(blocks) {
         </div>
       </div>
       <div class="block-meta">
-        ${b.actors ? `<span>👥 ${esc(b.actors)}</span>` : ''}
-        ${b.duration_minutes ? `<span>⏱ ${b.duration_minutes} min</span>` : ''}
+        ${b.actors ? `<span>${esc(b.actors)}</span>` : ''}
+        ${b.duration_minutes ? `<span>${b.duration_minutes} min</span>` : ''}
       </div>
       ${b.notes ? `<div class="block-notes">${esc(b.notes)}</div>` : ''}
     </div>
@@ -467,7 +467,7 @@ function renderUnionPanel(violations, warnings) {
   return `
     <div class="${panelClass}">
       <div class="union-panel-header">
-        <span class="union-mode-label">⚖ Union Mode (AEA)</span>
+        <span class="union-mode-label">Union Mode (AEA)</span>
         ${violations.length
           ? `<span class="union-count-badge union-viol-badge">${violations.length} violation${violations.length !== 1 ? 's' : ''}</span>`
           : warnings.length
