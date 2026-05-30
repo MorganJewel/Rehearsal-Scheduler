@@ -74,7 +74,7 @@ function renderScheduleList(schedules) {
   if (!schedules.length) {
     return `
       <div class="empty-state">
-        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-icon">—</div>
         <h3>No schedules yet</h3>
         <p>Add a schedule to start building rehearsal blocks</p>
       </div>
