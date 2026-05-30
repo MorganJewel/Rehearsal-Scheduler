@@ -16,9 +16,6 @@ export function navHTML(active = '') {
           Union ${union ? 'ON' : 'OFF'}
         </button>
         <button class="btn btn-ghost btn-sm" id="tour-btn">Take Tour</button>
-          ⚖ Union ${union ? 'ON' : 'OFF'}
-        </button>
-        <button class="btn btn-ghost btn-sm" id="tour-btn">✦ Take Tour</button>
       </div>
     </nav>
   `

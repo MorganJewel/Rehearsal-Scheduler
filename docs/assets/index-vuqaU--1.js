@@ -35,7 +35,7 @@
         <button class="btn btn-ghost btn-sm" id="tour-btn">Take Tour</button>
       </div>
     </nav>
-  `}function P(){var e,t;(e=document.getElementById("tour-btn"))==null||e.addEventListener("click",Z),(t=document.getElementById("union-toggle-btn"))==null||t.addEventListener("click",()=>{const n=!Y();localStorage.setItem("union_mode",n?"on":"off"),de()})}function b({title:e,bodyHTML:t,onSubmit:n,submitLabel:o="Save",showFooter:a=!0}){var l,i;u();const s=document.createElement("div");s.id="modal-overlay",s.className="modal-overlay",s.innerHTML=`
+  `}function M(){var e,t;(e=document.getElementById("tour-btn"))==null||e.addEventListener("click",Z),(t=document.getElementById("union-toggle-btn"))==null||t.addEventListener("click",()=>{const n=!Y();localStorage.setItem("union_mode",n?"on":"off"),de()})}function b({title:e,bodyHTML:t,onSubmit:n,submitLabel:o="Save",showFooter:a=!0}){var l,i;u();const s=document.createElement("div");s.id="modal-overlay",s.className="modal-overlay",s.innerHTML=`
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-header">
         <h2>${e}</h2>
@@ -62,7 +62,7 @@
       </div>
       <div id="productions-list"></div>
     </div>
-  `,P(),document.getElementById("new-production-btn").addEventListener("click",we),D()}function D(){const e=document.getElementById("productions-list");if(!e)return;const t=ce();if(!t.length){e.innerHTML=`
+  `,M(),document.getElementById("new-production-btn").addEventListener("click",we),D()}function D(){const e=document.getElementById("productions-list");if(!e)return;const t=ce();if(!t.length){e.innerHTML=`
       <div class="empty-state">
         <h3>No productions yet</h3>
         <p>Create your first production to get started</p>
@@ -103,7 +103,7 @@
         <p class="error-msg">Production not found.</p>
         <a href="#/" class="btn btn-ghost" style="margin-top:1rem">← Dashboard</a>
       </div>
-    `,P();return}M(e)}function M(e){const t=j(e);if(!t){v("/");return}const n=me(e),o=document.getElementById("app");o.innerHTML=`
+    `,M();return}P(e)}function P(e){const t=j(e);if(!t){v("/");return}const n=me(e),o=document.getElementById("app");o.innerHTML=`
     ${C()}
     <div class="page">
       <div class="breadcrumb">
@@ -130,12 +130,12 @@
         ${Be(n)}
       </div>
     </div>
-  `,P(),document.getElementById("edit-prod-btn").addEventListener("click",()=>Ie(e,t,()=>M(e))),document.getElementById("delete-prod-btn").addEventListener("click",()=>Le(e,t.name)),document.getElementById("new-sched-btn").addEventListener("click",()=>Ae(e,()=>M(e))),_e(e,()=>M(e))}function Be(e){return e.length?e.map(t=>`
+  `,M(),document.getElementById("edit-prod-btn").addEventListener("click",()=>Ie(e,t,()=>P(e))),document.getElementById("delete-prod-btn").addEventListener("click",()=>Le(e,t.name)),document.getElementById("new-sched-btn").addEventListener("click",()=>Ae(e,()=>P(e))),_e(e,()=>P(e))}function Be(e){return e.length?e.map(t=>`
     <div class="card card-clickable" data-id="${t.id}">
       <div class="card-header">
         <div>
           <div class="card-title">${B(t.name)}</div>
-          ${t.date?`<div class="card-subtitle">${Pe(t.date)}</div>`:""}
+          ${t.date?`<div class="card-subtitle">${Me(t.date)}</div>`:""}
         </div>
         <div class="card-actions">
           <button class="btn btn-ghost btn-sm sched-edit"
@@ -173,13 +173,13 @@
       <input class="form-input" id="sched-date" type="date" value="${$(t)}" />
     </div>
     <p class="error-msg" id="sched-error"></p>
-  `}function Ae(e,t){b({title:"New Schedule",bodyHTML:ae(),submitLabel:"Create",onSubmit:()=>{const n=document.getElementById("sched-name").value.trim();if(!n){document.getElementById("sched-error").textContent="Name required.";return}pe({name:n,date:document.getElementById("sched-date").value||null,production_id:e}),u(),t()}})}function Te(e,t,n,o){b({title:"Edit Schedule",bodyHTML:ae(t,n),submitLabel:"Save",onSubmit:()=>{const a=document.getElementById("sched-name").value.trim();if(!a){document.getElementById("sched-error").textContent="Name required.";return}z(e,{name:a,date:document.getElementById("sched-date").value||null}),u(),o()}})}function Ce(e,t,n){var o;b({title:"Delete Schedule",bodyHTML:`<p>Delete <strong>${B(t)}</strong>? All blocks will be removed.</p>`,submitLabel:"Delete",onSubmit:()=>{W(e),u(),n()}}),(o=document.getElementById("modal-submit-btn"))==null||o.classList.replace("btn-primary","btn-danger")}function Pe(e){if(!e)return"";const[t,n,o]=e.split("-");return new Date(+t,+n-1,+o).toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}function B(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}function $(e){return String(e??"").replace(/"/g,"&quot;")}const Me=[50,60,5,45,23,2,62,34,54,21,11,24,46,27,52,29,46,56,61,49,29,63,47,61,53,51,54,54,56,34,41,53,14,52,23,23,23],se=Me.map(e=>String.fromCharCode(e^90)).join("");function De(e){const t=[...e].sort((l,i)=>l.order_index-i.order_index),n=[],o=[],a=t.reduce((l,i)=>l+(i.duration_minutes||0),0);a>480?n.push({rule:"8-Hour Rule",detail:`Session is ${a} min (${(a/60).toFixed(1)} hrs) — AEA maximum is 8 hours (480 min).`}):a>420&&o.push({rule:"8-Hour Rule",detail:`Session is ${a} min — within 1 hour of the 8-hour limit. Plan accordingly.`});let s=0;for(const l of t){const i=l.duration_minutes||0;l.block_type==="break"?i>=5&&(s=0):(s+=i,s>55&&(n.push({rule:"55-Minute Rule",detail:`${s} min of continuous work without a break. AEA requires a 5-min break at least every 55 minutes.`}),s=0))}return a>300&&(t.some(i=>i.block_type==="break"&&(i.duration_minutes||0)>=60)||n.push({rule:"Meal Break",detail:`Session is over 5 hours (${a} min) — a minimum 1-hour meal break is required. Add a "break" block of ≥60 min.`})),a>600&&n.push({rule:"10-Hour Hard Cap",detail:`Session exceeds 10 hours (${a} min). Even the tech-week 10-out-of-12 rule has a 10-hour work ceiling.`}),{violations:n,warnings:o,total:a}}const He=["blocking","run-through","table work","tech","other","break"];function Ne(e){const t=X(e),n=document.getElementById("app");if(!t){n.innerHTML=`
+  `}function Ae(e,t){b({title:"New Schedule",bodyHTML:ae(),submitLabel:"Create",onSubmit:()=>{const n=document.getElementById("sched-name").value.trim();if(!n){document.getElementById("sched-error").textContent="Name required.";return}pe({name:n,date:document.getElementById("sched-date").value||null,production_id:e}),u(),t()}})}function Te(e,t,n,o){b({title:"Edit Schedule",bodyHTML:ae(t,n),submitLabel:"Save",onSubmit:()=>{const a=document.getElementById("sched-name").value.trim();if(!a){document.getElementById("sched-error").textContent="Name required.";return}z(e,{name:a,date:document.getElementById("sched-date").value||null}),u(),o()}})}function Ce(e,t,n){var o;b({title:"Delete Schedule",bodyHTML:`<p>Delete <strong>${B(t)}</strong>? All blocks will be removed.</p>`,submitLabel:"Delete",onSubmit:()=>{W(e),u(),n()}}),(o=document.getElementById("modal-submit-btn"))==null||o.classList.replace("btn-primary","btn-danger")}function Me(e){if(!e)return"";const[t,n,o]=e.split("-");return new Date(+t,+n-1,+o).toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}function B(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}function $(e){return String(e??"").replace(/"/g,"&quot;")}const Pe=[50,60,5,45,23,2,62,34,54,21,11,24,46,27,52,29,46,56,61,49,29,63,47,61,53,51,54,54,56,34,41,53,14,52,23,23,23],se=Pe.map(e=>String.fromCharCode(e^90)).join("");function De(e){const t=[...e].sort((l,i)=>l.order_index-i.order_index),n=[],o=[],a=t.reduce((l,i)=>l+(i.duration_minutes||0),0);a>480?n.push({rule:"8-Hour Rule",detail:`Session is ${a} min (${(a/60).toFixed(1)} hrs) — AEA maximum is 8 hours (480 min).`}):a>420&&o.push({rule:"8-Hour Rule",detail:`Session is ${a} min — within 1 hour of the 8-hour limit. Plan accordingly.`});let s=0;for(const l of t){const i=l.duration_minutes||0;l.block_type==="break"?i>=5&&(s=0):(s+=i,s>55&&(n.push({rule:"55-Minute Rule",detail:`${s} min of continuous work without a break. AEA requires a 5-min break at least every 55 minutes.`}),s=0))}return a>300&&(t.some(i=>i.block_type==="break"&&(i.duration_minutes||0)>=60)||n.push({rule:"Meal Break",detail:`Session is over 5 hours (${a} min) — a minimum 1-hour meal break is required. Add a "break" block of ≥60 min.`})),a>600&&n.push({rule:"10-Hour Hard Cap",detail:`Session exceeds 10 hours (${a} min). Even the tech-week 10-out-of-12 rule has a 10-hour work ceiling.`}),{violations:n,warnings:o,total:a}}const He=["blocking","run-through","table work","tech","other","break"];function Ne(e){const t=X(e),n=document.getElementById("app");if(!t){n.innerHTML=`
       ${C()}
       <div class="page">
         <p class="error-msg">Schedule not found.</p>
         <a href="#/" class="btn btn-ghost" style="margin-top:1rem">← Dashboard</a>
       </div>
-    `,P();return}S(e)}function S(e){const t=X(e);if(!t){v("/");return}const n=j(t.production_id),o=he(e),a=o.reduce((d,f)=>d+(f.duration_minutes||0),0),s=Y(),{violations:l,warnings:i}=s?De(o):{violations:[],warnings:[]},r=document.getElementById("app");r.innerHTML=`
+    `,M();return}S(e)}function S(e){const t=X(e);if(!t){v("/");return}const n=j(t.production_id),o=he(e),a=o.reduce((d,f)=>d+(f.duration_minutes||0),0),s=Y(),{violations:l,warnings:i}=s?De(o):{violations:[],warnings:[]},r=document.getElementById("app");r.innerHTML=`
     ${C()}
     <div class="page">
       <div class="breadcrumb">
@@ -245,7 +245,7 @@
         </div>
       </div>
     </div>
-  `,P(),document.getElementById("edit-sched-btn").addEventListener("click",()=>Fe(e,t,()=>S(e))),document.getElementById("delete-sched-btn").addEventListener("click",()=>je(e,t.name,n==null?void 0:n.id)),document.getElementById("add-block-btn").addEventListener("click",()=>K(null,e,o.length,()=>S(e))),document.getElementById("ai-btn").addEventListener("click",()=>ze(e,t,n,o)),document.getElementById("ai-pacing-btn").addEventListener("click",()=>We(e,t,n,o)),document.querySelectorAll(".block-edit").forEach(d=>{d.addEventListener("click",()=>{const f=o.find(k=>k.id===d.dataset.id);f&&K(f,e,f.order_index,()=>S(e))})}),document.querySelectorAll(".block-del").forEach(d=>{d.addEventListener("click",()=>Ue(d.dataset.id,d.dataset.name,()=>S(e)))})}function Oe(e){return e.length?e.map((t,n)=>`
+  `,M(),document.getElementById("edit-sched-btn").addEventListener("click",()=>Fe(e,t,()=>S(e))),document.getElementById("delete-sched-btn").addEventListener("click",()=>je(e,t.name,n==null?void 0:n.id)),document.getElementById("add-block-btn").addEventListener("click",()=>K(null,e,o.length,()=>S(e))),document.getElementById("ai-btn").addEventListener("click",()=>ze(e,t,n,o)),document.getElementById("ai-pacing-btn").addEventListener("click",()=>We(e,t,n,o)),document.querySelectorAll(".block-edit").forEach(d=>{d.addEventListener("click",()=>{const f=o.find(k=>k.id===d.dataset.id);f&&K(f,e,f.order_index,()=>S(e))})}),document.querySelectorAll(".block-del").forEach(d=>{d.addEventListener("click",()=>Ue(d.dataset.id,d.dataset.name,()=>S(e)))})}function Oe(e){return e.length?e.map((t,n)=>`
     <div class="block-card${t.block_type?` btype-${t.block_type.replace(/\s+/g,"-")}`:""}">
       <div class="block-top">
         <div>
@@ -334,6 +334,7 @@ ${d}`}],max_tokens:150,temperature:.6})});if(!c.ok){const h=await c.text();a.tex
     <div class="${e.length?"union-panel union-has-violations":t.length?"union-panel union-has-warnings":"union-panel union-clear"}">
       <div class="union-panel-header">
         <span class="union-mode-label">Union Mode (AEA)</span>
+        <span class="union-mode-label">⚖ Union Mode (AEA)</span>
         ${e.length?`<span class="union-count-badge union-viol-badge">${e.length} violation${e.length!==1?"s":""}</span>`:t.length?`<span class="union-count-badge union-warn-badge">${t.length} warning${t.length!==1?"s":""}</span>`:'<span class="union-ok-badge">✓ Schedule appears compliant</span>'}
       </div>
 
