@@ -468,6 +468,7 @@ function renderUnionPanel(violations, warnings) {
     <div class="${panelClass}">
       <div class="union-panel-header">
         <span class="union-mode-label">Union Mode (AEA)</span>
+        <span class="union-mode-label">⚖ Union Mode (AEA)</span>
         ${violations.length
           ? `<span class="union-count-badge union-viol-badge">${violations.length} violation${violations.length !== 1 ? 's' : ''}</span>`
           : warnings.length

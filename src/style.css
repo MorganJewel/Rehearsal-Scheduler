@@ -141,6 +141,18 @@ body {
 
 /* ─── Page layout ──────────────────────────────────────────────── */
 
+.btn-union-on {
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+}
+
+.btn-union-on:hover:not(:disabled) {
+  background: rgba(201, 168, 76, 0.25);
+}
+
+/* ─── Page layout ─────────────────────────────────────── */
 .page {
   max-width: 860px;
   margin: 0 auto;
@@ -334,6 +346,12 @@ body {
 .badge-tech        { border-color: #3a1860; color: #8050b8; }
 .badge-break       { border-color: #183a3a; color: #309898; }
 .badge-other       { border-color: var(--border); color: var(--text2); }
+.badge-blocking     { background: #1e3366; color: #80b4ff; }
+.badge-run-through  { background: #1a3d2a; color: #70e890; }
+.badge-table-work   { background: #3d3010; color: #f0bc50; }
+.badge-tech         { background: #30124a; color: #cc80ff; }
+.badge-break        { background: #1a2e2e; color: #60d4d4; }
+.badge-other        { background: #2a2a2a; color: #999; }
 
 .block-meta {
   font-size: 0.78rem;
@@ -808,4 +826,94 @@ hr.divider {
   border-top: 1px solid var(--border);
   font-style: italic;
   font-family: var(--font-display);
+}
+
+/* ─── Union panel ─────────────────────────────────────── */
+.union-panel {
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+}
+
+.union-clear {
+  background: rgba(96, 212, 212, 0.06);
+  border-color: rgba(96, 212, 212, 0.25);
+}
+
+.union-has-warnings {
+  background: rgba(201, 168, 76, 0.07);
+  border-color: rgba(201, 168, 76, 0.35);
+}
+
+.union-has-violations {
+  background: rgba(233, 69, 96, 0.07);
+  border-color: rgba(233, 69, 96, 0.4);
+}
+
+.union-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.union-mode-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+}
+
+.union-ok-badge {
+  font-size: 0.82rem;
+  color: #60d4d4;
+  font-weight: 600;
+}
+
+.union-count-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+}
+
+.union-viol-badge { background: rgba(233,69,96,0.2); color: var(--accent2); }
+.union-warn-badge { background: rgba(201,168,76,0.2); color: var(--accent); }
+
+.union-issue-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.85rem;
+}
+
+.union-rule-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.union-tag-violation { background: rgba(233,69,96,0.18); color: var(--accent2); }
+.union-tag-warning   { background: rgba(201,168,76,0.18); color: var(--accent); }
+
+.union-issue-detail { color: var(--text2); line-height: 1.5; }
+
+.union-hint {
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-style: italic;
 }
