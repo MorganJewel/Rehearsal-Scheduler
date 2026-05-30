@@ -78,7 +78,7 @@ function renderPage(id) {
       <div class="ai-panel">
         <div class="ai-panel-header">
           <span class="ai-panel-title">Apertus AI</span>
-          <span class="ai-advisory-label">Advisory only — all decisions stay with you</span>
+          <span class="ai-advisory-label">Advisory only. All decisions stay with you.</span>
         </div>
         <div class="ai-btn-row">
           <button class="btn btn-ghost btn-sm" id="ai-btn">Suggest Schedule Name</button>
@@ -97,7 +97,7 @@ function renderPage(id) {
         <p class="cs-desc">
           Send today's schedule directly to cast and crew, push on-deck reminders
           to actors waiting outside, and manage multiple simultaneous schedules
-          during tech week — all without leaving the app.
+          during tech week, all without leaving the app.
         </p>
         <div class="cs-features">
           <span class="cs-feature">→ Cast &amp; crew schedule distribution</span>
@@ -189,7 +189,7 @@ function blockFormHTML(b = {}) {
       <div class="form-group">
         <label class="form-label">Block Type</label>
         <select class="form-select" id="b-type">
-          <option value="">— select —</option>
+          <option value="">select type</option>
           ${BLOCK_TYPES.map(t => `<option value="${t}" ${b.block_type === t ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </div>
