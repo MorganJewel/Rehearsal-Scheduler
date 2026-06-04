@@ -321,7 +321,7 @@ ${blockSummary}`
 
   try {
     const res = await fetch(
-      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+      'https://router.huggingface.co/publicai/v1/chat/completions',
       {
         method: 'POST',
         headers: {
@@ -408,7 +408,7 @@ async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
 
   try {
     const res = await fetch(
-      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+      'https://router.huggingface.co/publicai/v1/chat/completions',
       {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${HF_API_KEY}`, 'Content-Type': 'application/json' },
