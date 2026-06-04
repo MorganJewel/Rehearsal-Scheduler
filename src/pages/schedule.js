@@ -6,8 +6,9 @@ import {
 } from '../store.js'
 import { navHTML, attachNavListeners, isUnionMode } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
-import { API_KEY } from '../config.js'
 import { checkUnionRules } from '../union.js'
+
+const WORKER_URL = 'https://soft-block-5a15.morganjewel01.workers.dev'
 
 const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other', 'break']
 
@@ -296,7 +297,6 @@ function confirmDeleteSched(id, name, productionId) {
 // ── AI Suggestion ─────────────────────────────────────────────────
 
 async function runAI(scheduleId, schedule, production, blocks) {
-  const hfKey = API_KEY
   const statusEl = document.getElementById('ai-status')
   const suggestionsEl = document.getElementById('ai-suggestions')
   const btn = document.getElementById('ai-btn')
@@ -320,14 +320,9 @@ Blocks:
 ${blockSummary}`
 
   try {
-    const res = await fetch(
-      'https://api.publicai.co/v1/chat/completions',
-      {
+    const res = await fetch(WORKER_URL, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${hfKey}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'swiss-ai/Apertus-8B-Instruct-2509',
           messages: [
@@ -407,11 +402,9 @@ async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
   ).join('\n')
 
   try {
-    const res = await fetch(
-      'https://api.publicai.co/v1/chat/completions',
-      {
+    const res = await fetch(WORKER_URL, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'swiss-ai/Apertus-8B-Instruct-2509',
           messages: [
