@@ -6,9 +6,8 @@ import {
 } from '../store.js'
 import { navHTML, attachNavListeners, isUnionMode } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
+import { API_KEY } from '../config.js'
 import { checkUnionRules } from '../union.js'
-
-const WORKER_URL = 'https://soft-block-5a15.morganjewel01.workers.dev'
 
 const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other', 'break']
 
@@ -320,9 +319,9 @@ Blocks:
 ${blockSummary}`
 
   try {
-    const res = await fetch(WORKER_URL, {
+    const res = await fetch('https://router.huggingface.co/featherless-ai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'swiss-ai/Apertus-8B-Instruct-2509',
           messages: [
@@ -402,9 +401,9 @@ async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
   ).join('\n')
 
   try {
-    const res = await fetch(WORKER_URL, {
+    const res = await fetch('https://router.huggingface.co/featherless-ai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'swiss-ai/Apertus-8B-Instruct-2509',
           messages: [
