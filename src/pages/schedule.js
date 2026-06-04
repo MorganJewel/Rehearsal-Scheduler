@@ -324,7 +324,7 @@ ${blockSummary}`
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'swiss-ai/Apertus-8B-Instruct-2509',
+          model: 'swiss-ai/apertus-8b-instruct',
           messages: [
             { role: 'system', content: 'You are a concise assistant helping a theater director name rehearsal schedules.' },
             { role: 'user', content: userMsg }
@@ -406,7 +406,7 @@ async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'swiss-ai/Apertus-8B-Instruct-2509',
+          model: 'swiss-ai/apertus-8b-instruct',
           messages: [
             {
               role: 'system',
