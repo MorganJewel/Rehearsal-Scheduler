@@ -6,7 +6,7 @@ import {
 } from '../store.js'
 import { navHTML, attachNavListeners, isUnionMode } from '../nav.js'
 import { openModal, closeModal } from '../modal.js'
-import { HF_API_KEY } from '../config.js'
+import { API_KEY } from '../config.js'
 import { checkUnionRules } from '../union.js'
 
 const BLOCK_TYPES = ['blocking', 'run-through', 'table work', 'tech', 'other', 'break']
@@ -296,7 +296,7 @@ function confirmDeleteSched(id, name, productionId) {
 // ── AI Suggestion ─────────────────────────────────────────────────
 
 async function runAI(scheduleId, schedule, production, blocks) {
-  const hfKey = HF_API_KEY
+  const hfKey = API_KEY
   const statusEl = document.getElementById('ai-status')
   const suggestionsEl = document.getElementById('ai-suggestions')
   const btn = document.getElementById('ai-btn')
@@ -321,7 +321,7 @@ ${blockSummary}`
 
   try {
     const res = await fetch(
-      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+      'https://api.publicai.co/v1/chat/completions',
       {
         method: 'POST',
         headers: {
@@ -408,10 +408,10 @@ async function runPacingAnalysis(scheduleId, schedule, production, blocks) {
 
   try {
     const res = await fetch(
-      'https://router.huggingface.co/featherless-ai/v1/chat/completions',
+      'https://api.publicai.co/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${HF_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'swiss-ai/Apertus-8B-Instruct-2509',
           messages: [
